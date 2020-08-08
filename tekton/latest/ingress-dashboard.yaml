@@ -7,7 +7,7 @@ spec:
   rules:
   - http:
       paths:
-        - path: /tekton-dashboard
+        - path: /
           backend:
             serviceName: tekton-dashboard
             servicePort: 9097

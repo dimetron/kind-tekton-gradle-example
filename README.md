@@ -32,13 +32,17 @@ tkn task list
 
 ## Tekton Dashboard 
 
-As part of demo repository dashboard installed with ingress http://localhost:8080/tekton-dashboard/
+As part of demo repository dashboard installed with ingress http://localhost:8080/#/pipelineruns
+
+![alt text](https://github.com/dimetron/kind-tekton-gradle-example/raw/master/docs/tekton-dashboard.png "Dashboard")
 
 ## Using Tekton Plugin VS Code / IntelliJ
 
 VS Code:
 ![alt text](https://github.com/dimetron/kind-tekton-gradle-example/raw/master/docs/vs-code-tekton.png "VSCode plugin")
 
+IntelliJ:
+![alt text](https://github.com/dimetron/kind-tekton-gradle-example/raw/master/docs/intellij-tekton.png "IDEA plugin")
 
 ## References:
 
