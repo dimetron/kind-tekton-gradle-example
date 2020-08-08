@@ -6,7 +6,14 @@ This project is example how to migrate legacy groovy jenkins pipelines to cloud 
 
 - Docker Desktop
 
-## Creating k8s cluster
+## Creating k8s cluster and 
+
+Gradle default task `all-tasks` will do 
+
+- setup local cluster
+- deploy tekton
+- deploy tasks and pipelines
+- execute pipeline using tekton pipeline-run
 
 ```./gradlew```
 
