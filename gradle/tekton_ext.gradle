@@ -1,7 +1,6 @@
 ext {
     clusterTestPassed = false
-    cli = ''
-    knd = ''
+    userHome = isWindows ? System.getenv('USERPROFILE') : System.getenv('HOME')
 }
 
 //test tools UP and k8s is alive
@@ -10,9 +9,11 @@ task verify_tekton_cluster  {
         try {
             new File("logs").mkdirs()
             new File(".gradle/cluster").delete()
-            cli = sh(script: "docker ps -q -a --no-trunc --filter name=$shell_cli", returnStdout: true).trim()
-            clusterTestPassed = sh(script: "kind get nodes --name ${project.name} 2>/dev/null || :", returnStdout: true).length() > 0
-            new File(".gradle/cluster") << "$cli $clusterTestPassed"
+            String cli = sh(script: "docker ps -q -a --no-trunc --filter name=$shell_cli", localMode: true, returnStdout: true).trim()
+            if (cli.length() > 0) {
+                clusterTestPassed = sh(script: "kind get nodes --name ${project.name} 2>/dev/null || :", returnStdout: true).length() > 0
+                new File(".gradle/cluster") << "$cli $clusterTestPassed"
+            }
         } catch(Exception e) {
             println "Tekton cluster not found ${e.message}"
         }
@@ -23,16 +24,27 @@ task verify_tekton_cluster  {
 task create_tekton_cluster(dependsOn: verify_tekton_cluster) {
     //skip if cluster is up
     onlyIf = { !project.properties['clusterTestPassed'] }
+
     // prepare tools container
     doFirst {
-        def logs = new File("$workspace/tekton").absolutePath
+        def logs = new File("$workspace/logs").absolutePath
         def tekton = new File("$workspace/tekton").absolutePath
-        sh(script: "docker rm  -f $shell_cli", localMode: true, returnStatus: true)
-        sh(script: "docker run -d --name $shell_cli --restart=always --privileged --net=host -v $logs:/root/logs -v $tekton:/root/tekton -v /var/run/docker.sock:/var/run/docker.sock local-dev-tools:latest", localMode: true, returnStdout: true).trim()
-        sh(script: "kind delete cluster --name ${project.name}", returnStatus: true)
+        def tools = new File("$workspace/tools").absolutePath
 
+        def cmd = "docker run -d --name $shell_cli --restart=always --privileged --net=host"
+        cmd = "$cmd -v $logs:/root/logs"
+        cmd = "$cmd -v $tools:/root/tools"
+        cmd = "$cmd -v $tekton:/root/tekton"
+        cmd = "$cmd -v /var/run/docker.sock:/var/run/docker.sock dev-tools:latest"
+
+        sh(script: "docker rm  -f $shell_cli", localMode: true,  returnStatus: true, returnStderr: true)
+        sh(script: "$cmd", localMode: true, returnStderr: true).trim()
+        sh(script: "kind delete cluster --name ${project.name}", returnStatus: true)
+    }
+
+    doLast {
         sh """
-        kind create cluster --name ${project.name} --wait 2m 2>&1
+        kind create cluster --name ${project.name} --config=/root/tools/kind-config.yaml --wait 2m 2>&1
         mkdir -p ~/.kube
         kind get kubeconfig --name ${project.name} > ~/.kube/config
         """
@@ -42,14 +54,25 @@ task create_tekton_cluster(dependsOn: verify_tekton_cluster) {
 task install_tekton(dependsOn: create_tekton_cluster) {
     group = 'tekton-cd'
 
-    inputs.file('tekton/latest/release.yaml')
+    inputs.dir('tekton/latest')
     outputs.file('logs/install.log')
 
     doFirst {
         println"${styler['blue']('Deploying Tekton')} ${styler['cyan']('...')}\n"
         sh """
-        kubectl apply -f tekton/latest/release.yaml | tee logs/install.log
-        kubectl wait --for=condition=ready pod -l app=tekton-pipelines-controller --timeout=120s -n tekton-pipelines || :
+        kubectl apply -f tekton/latest/release.yaml           | tee logs/install.log
+        kubectl apply -f tekton/latest/triggers-release.yaml  | tee logs/triggers.log
+        kubectl apply -f tekton/latest/dashboard-release.yaml | tee logs/dashboard.log
+        kubectl apply -f tekton/latest/ingress.yaml           | tee logs/ingress.log
+        """
+    }
+
+    doLast {
+        println"${styler['blue']('Waiting for pods to start')} ${styler['cyan']('...')}"
+        sh """
+        kubectl wait --for=condition=ready pod --selector=app=tekton-pipelines-controller        --timeout=120s --namespace tekton-pipelines || :
+        kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s --namespace ingress-nginx    || :  
+        kubectl apply -f tekton/latest/ingress-dashboard.yaml
         """
     }
 }
@@ -57,18 +80,30 @@ task install_tekton(dependsOn: create_tekton_cluster) {
 //task starts tekton pipeline in kind k8s cluster
 tasks.register('pipeline_run') {
     group = 'tekton-cd'
+
     doFirst {
-        println"${styler['blue']('Tekton Status')} ${styler['cyan']('...')}\n"
+        println"${styler['blue']('Tekton Status')} ${styler['cyan']('...')}"
         sh """
+        kind load docker-image dev-tools:latest --name ${project.name}
         kubectl get pods -n tekton-pipelines
         """
+
+        //copy kubectl from container to the host
+        sh "kubectl config set-context --current --namespace=tekton-pipelines"
+        def configFile = new File("$userHome/.kube/config")
+        configFile.mkdirs()
+        configFile.delete()
+        String config = sh(script: "cat ~/.kube/config", returnStdout: true)
+        configFile << config
+
     }
 
     doLast {
-        ['tasks', 'pipeline_resources', 'pipeline', 'pipeline_run'].each { kind ->
-            println"${styler['blue']("Deploying")} ${styler['cyan']("$kind")}\n"
+        def resources = ['pipeline_resources', 'tasks', 'pipeline', 'pipeline_run', 'pipeline_triggers']
+        resources.each { kind ->
+            println"${styler['blue']("Deploying")} ${styler['cyan']("$kind")}"
             sh """
-            kubectl apply -f tekton/${kind}.yaml | tee logs/${kind}.log
+            kubectl apply -f tekton/${kind}.yaml | tee /root/logs/${kind}.log
             """
         }
     }

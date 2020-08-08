@@ -1,11 +1,11 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: skaffold-git
+  name: tekton-gradle-example-git
 spec:
   type: git
   params:
   - name: revision
     value: master
   - name: url
-    value: https://github.com/GoogleContainerTools/skaffold
+    value: https://github.com/dimetron/kind-tekton-gradle-example.git

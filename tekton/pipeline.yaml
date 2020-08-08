@@ -1,27 +1,50 @@
-apiVersion: tekton.dev/v1alpha1
+---
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: output-pipeline
+  name: print-date-pipeline
+spec:
+  tasks:
+    - name: print-date-step
+      taskRef:
+        name: print-date
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: cd-pipeline
 spec:
   resources:
-  - name: source-repo
-    type: git
+    - name: tekton-gradle-example-git
+      type: git
+  workspaces:
+    - name: git-source
+      description: The git repo
+  params:
+    - name: gitUrl
+      description: Git repository url
+    - name: gitRevision
+      description: Git revision to check out
+      default: master
   tasks:
-  - name: first-create-file          # 1. create file
-    taskRef:
-      name: create-file
-    resources:
-      inputs:
-      - name: workspace
-        resource: source-repo
-      outputs:
-      - name: workspace
-        resource: source-repo
-  - name: then-check                 # 2.  check file exists
-    taskRef:
-      name: check-stuff-file-exists
-    resources:
-      inputs:
-      - name: workspace
-        resource: source-repo
-        from: [first-create-file]
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: git-source
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(params.gitRevision)"
+        - name: subdirectory
+          value: "."
+        - name: deleteExisting
+          value: "true"
+    - name: build-docker
+      taskRef:
+        name: kaniko
+    - name: run-gradle
+      taskRef:
+        name: gradle

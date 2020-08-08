@@ -79,49 +79,54 @@ def sh(Map opts) {
     }
 
     def startTime = System.nanoTime()
-        new ByteArrayOutputStream().withStream { err ->
+
+    new ByteArrayOutputStream().withStream { err ->
         new ByteArrayOutputStream().withStream { os ->
 
-        def result = exec {
-            ignoreExitValue = true
-            commandLine = cmdline
-            standardInput  = new ByteArrayInputStream("${script}".getBytes( 'UTF-8' ))
-            standardOutput = ("${opts.returnStdout}" == "true" && opts.debug == null ? os : new TeeOutputStream(os, System.out))
-            errorOutput = new TeeOutputStream(err, System.err)
-            environment << project.ext.env
-        }
+            OutputStream stdOut = ("${opts.returnStdout}" == "true" ? os  : new TeeOutputStream(os, System.out))
+            OutputStream stdErr = ("${opts.returnStderr}" == "true" ? err : new TeeOutputStream(err, System.err))
 
-        def res = os.toString().trim()
-        def lastError = err.toString()
-        lastErrorThreadLocal.set(lastError)
-
-        if (isWindows) {
-            res = os.toString().replaceAll('\r\n', '\n').trim()
-        }
-        def endTime = System.nanoTime()
-        def rttime = (endTime - startTime) / 1000000000;
-
-        //save command log
-        synchronized (cmdLog) {
-            cmdLog << "\n[$rttime][${result.getExitValue()}][$opts.script]\n$script"
-        }
-
-        //check if error needs to be ignored
-        if ("${opts.ignoreStatus}".trim() != "true") {
-            if (result.getExitValue() != 0 && "${opts.returnStatus}" != "true") {
-                def e = new Exception("${opts.script} is not equal 0 !!! >> ${lastError}")
-                //show only place with sh call
-                throw e
+            def result = exec {
+                ignoreExitValue = true
+                commandLine = cmdline
+                standardInput  = new ByteArrayInputStream("${script}".getBytes( 'UTF-8' ))
+                standardOutput = stdOut
+                errorOutput = stdErr
+                environment << project.ext.env
             }
+
+            def res = os.toString().trim() + err.toString().trim()
+            def lastError = err.toString()
+            lastErrorThreadLocal.set(lastError)
+
+            if (isWindows) {
+                res = os.toString().replaceAll('\r\n', '\n').trim()
+            }
+            def endTime = System.nanoTime()
+            def rttime = (endTime - startTime) / 1000000000;
+
+            //save command log
+            synchronized (cmdLog) {
+                cmdLog << "\n[$rttime][${result.getExitValue()}][$opts.script]\n$script"
+            }
+
+            //check if error needs to be ignored
+            if ("${opts.ignoreStatus}".trim() != "true") {
+                if (result.getExitValue() != 0 && "${opts.returnStatus}" != "true") {
+                    def e = new Exception("${opts.script} is not equal 0 !!! >> ${lastError}")
+                    //show only place with sh call
+                    throw e
+                }
+            }
+            if ("${opts.returnStatus}" == "true") {
+                return result.getExitValue()
+            }
+            if ("${opts.returnStdout}" == "true") {
+                return "${res}"
+            }
+            return ""
         }
-        if ("${opts.returnStatus}" == "true") {
-            return result.getExitValue()
-        }
-        if ("${opts.returnStdout}" == "true") {
-            return "${res}"
-        }
-        return ""
-    }}
+    }
 }
 
 //default ENV for exec

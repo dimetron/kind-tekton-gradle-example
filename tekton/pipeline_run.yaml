@@ -1,11 +1,8 @@
+---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
-  name: output-pipeline-run
+  name: print-date-pipeline-run
 spec:
   pipelineRef:
-    name: output-pipeline
-  resources:
-  - name: source-repo
-    resourceRef:
-      name: skaffold-git
+    name: print-date-pipeline
