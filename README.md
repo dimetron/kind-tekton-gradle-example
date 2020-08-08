@@ -1,14 +1,27 @@
 # Tekton Pipeline example with Gradle 
 
-This project is example how to migrate legacy groovy jenkins pipelines to the cloud native tekton CD 
+This project is example how to migrate from jenkins pipelines to the cloud native tekton CD using gradle
+
+## What is Included
+
+- scripts to bootstrap local k8s cluster with Kind https://kind.sigs.k8s.io
+- latest Tekton pipelines and triggers with dashboard
 
 ## Requirements 
 
-- Docker Desktop
+All tools baked inside Docker image https://github.com/dimetron/kind-tekton-gradle-example/blob/master/tools/Dockerfile
+
+- IDE VS Code or IntelliJ (alternative CLI gradlew supported)
+- Docker Desktop with 6 GB RAM and shared drive
+
+![alt text](https://github.com/dimetron/kind-tekton-gradle-example/raw/master/docs/docker.png "Docker")
+
+Optionally:
+
 - kubectl
 - tkn 
 
-## Creating k8s cluster and 
+## Creating k8s cluster
 
 Gradle default task `all-tasks` will do 
 
@@ -56,7 +69,6 @@ Tutorials:
 
 - https://developer.ibm.com/technologies/devops/tutorials/build-and-deploy-a-docker-image-on-kubernetes-using-tekton-pipelines/#create-a-task-to-build-an-image-and-push-it-to-a-container-registry
 - https://developer.ibm.com/tutorials/tekton-triggers-101/
-
 
 ## Troubleshooting
 
