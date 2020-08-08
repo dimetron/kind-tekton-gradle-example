@@ -1,0 +1,142 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'commons-io:commons-io:2.6'
+        classpath 'org.yaml:snakeyaml:1.12'
+        classpath 'org.codehaus.gpars:gpars:1.1.0'
+    }
+}
+
+ext {
+    //for styles
+    styler = 'black red green yellow blue magenta cyan white'
+            .split().toList().withIndex(30)
+            .collectEntries { key, val -> [(key) : { "\033[${val}m${it}\033[0m" }] }
+
+    env = [:]
+    lock = [:]
+    printlock = new Object()
+    lastErrorThreadLocal = new ThreadLocal<String>()
+
+    isWindows = System.properties['os.name'].toLowerCase().contains('windows')
+    taskName = gradle.startParameter.taskNames[0]
+    
+    shell_cli = 'dev-tools'
+    workspace = System.getProperty('user.dir')
+    cmdLog = new File("commands.log")
+
+    sh            = this.&sh
+    retry         = this.&retry
+    readYaml      = this.&readYaml
+        
+}
+
+// Import task types
+import com.bmuschko.gradle.docker.tasks.image.*
+
+// Log timings per task.
+import org.apache.commons.io.output.TeeOutputStream
+import org.apache.tools.ant.filters.ReplaceTokens
+import org.gradle.internal.logging.text.StyledTextOutput;
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import java.util.concurrent.TimeUnit;
+import java.security.MessageDigest
+import java.io.*
+
+def sh(GString cmd) {
+    sh(script: cmd, returnStdout:false)
+}
+
+def sh(String cmd) {
+    sh(script: cmd, returnStdout:false)
+}
+
+def sh(Map opts) {
+    def isWindows = System.properties['os.name'].toLowerCase().contains('windows')
+
+    def cmdline = ['sh']
+    def script = "${opts.script}".replaceAll('\r\n', '\n').trim()
+    def localMode = opts.containsKey('localMode')
+
+    //2 exceptions to run locally
+    def localOnlyCommands = ['git', 'hostname', 'cmd', 'start']
+    if (localOnlyCommands.any {script.startsWith(it)} || shell_cli.length() == 0 || localMode) {
+        if (isWindows) {
+            cmdline = opts.script.split(' ')
+            script = ''
+        } else {
+            cmdline = ['/bin/sh']
+        }
+    } else {
+        cmdline = "docker exec -i $shell_cli /bin/sh".split(' ')
+    }
+
+    //for CI we skip docker exec and use directly pod
+    if (System.getProperty('java.home').startsWith('/root/.sdkman/candidates')) {
+        cmdline = "/bin/sh"
+    }
+
+    def startTime = System.nanoTime()
+        new ByteArrayOutputStream().withStream { err ->
+        new ByteArrayOutputStream().withStream { os ->
+
+        def result = exec {
+            ignoreExitValue = true
+            commandLine = cmdline
+            standardInput  = new ByteArrayInputStream("${script}".getBytes( 'UTF-8' ))
+            standardOutput = ("${opts.returnStdout}" == "true" && opts.debug == null ? os : new TeeOutputStream(os, System.out))
+            errorOutput = new TeeOutputStream(err, System.err)
+            environment << project.ext.env
+        }
+
+        def res = os.toString().trim()
+        def lastError = err.toString()
+        lastErrorThreadLocal.set(lastError)
+
+        if (isWindows) {
+            res = os.toString().replaceAll('\r\n', '\n').trim()
+        }
+        def endTime = System.nanoTime()
+        def rttime = (endTime - startTime) / 1000000000;
+
+        //save command log
+        synchronized (cmdLog) {
+            cmdLog << "\n[$rttime][${result.getExitValue()}][$opts.script]\n$script"
+        }
+
+        //check if error needs to be ignored
+        if ("${opts.ignoreStatus}".trim() != "true") {
+            if (result.getExitValue() != 0 && "${opts.returnStatus}" != "true") {
+                def e = new Exception("${opts.script} is not equal 0 !!! >> ${lastError}")
+                //show only place with sh call
+                throw e
+            }
+        }
+        if ("${opts.returnStatus}" == "true") {
+            return result.getExitValue()
+        }
+        if ("${opts.returnStdout}" == "true") {
+            return "${res}"
+        }
+        return ""
+    }}
+}
+
+//default ENV for exec
+def retry(Closure cl, int backOff=5000) {
+    try {
+        cl()
+    } catch (e) {
+        Thread.currentThread().sleep(backOff)
+        cl()
+    }
+}
+
+def readYaml(Map opts) {
+    if (opts.file != null) {
+        opts.text = new File(opts.file).getText('UTF-8')
+    }
+    return new org.yaml.snakeyaml.Yaml().load(new BufferedReader(new StringReader(opts.text)))
+}

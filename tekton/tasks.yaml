@@ -1,0 +1,16 @@
+---
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: run-gradle
+spec:
+  inputs:
+    resources:
+    - name: workspace
+      type: git
+      targetPath: newworkspace
+  steps:
+  - name: read
+    image: ubuntu
+    command: ["/bin/bash"]
+    args: ['-c', 'gradle hello_gradle']

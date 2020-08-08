@@ -1,0 +1,25 @@
+//add some DSL
+apply from: 'gradle/gradle_ext.gradle'
+apply from: 'gradle/tekton_ext.gradle'
+
+task build_tools {
+    inputs.dir("tools")
+    outputs.dir("tools")
+    doLast {
+        sh(script: 'docker build tools -t dev-tools:latest', localMode: true, returnStatus: true)
+    }
+}
+
+// hello gradle task
+tasks.register('hello_gradle') {
+    group = 'tekton-tasks'
+    doLast {
+        sh 'echo "Hello Gradle"'
+    }
+}
+
+tasks.register('all-tasks') {
+    group = 'tekton-cd'
+    dependsOn = [build_tools, create_tekton_cluster, install_tekton, pipeline_run]
+}
+defaultTasks 'all-tasks'
