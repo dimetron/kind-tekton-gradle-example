@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Condition
+metadata:
+  name: verify-clean-build
+spec:
+  params:
+    - name: "path"
+  resources:
+    - name: optional-workspace
+      type: git
+      optional: true
+  check:
+    image: $(params.image)
+    script: 'test -z "true"'
+    #script: 'test -z "$(git tag | grep clean-master)"'

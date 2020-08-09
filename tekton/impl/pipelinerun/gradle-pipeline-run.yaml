@@ -1,8 +1,7 @@
----
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
-  name: print-date-pipeline-run
+  name: gradle-pipelinerun
 spec:
   pipelineRef:
-    name: print-date-pipeline
+    name: gradle-pipeline

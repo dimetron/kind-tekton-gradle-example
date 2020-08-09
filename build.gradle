@@ -6,7 +6,7 @@ task build_tools {
     inputs.dir("tools")
     outputs.dir("tools")
     doLast {
-        sh(script: 'docker build tools -t dev-tools:latest', localMode: true, returnStatus: true)
+        sh(script: 'docker build tools/dev-tools -t dev-tools:latest', localMode: true, returnStatus: true)
     }
 }
 

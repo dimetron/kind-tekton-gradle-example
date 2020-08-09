@@ -1,0 +1,14 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: echo-hello
+spec:
+  params:
+    - name: sname
+      description: name to print
+      type: string
+      default: 'tekton'
+  steps:
+    - name: echo
+      image: ubuntu
+      script: 'echo hello $(params.sname)'

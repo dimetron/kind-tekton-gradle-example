@@ -668,3 +668,17 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 2000
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            backend:
+              serviceName: tekton-dashboard
+              servicePort: 9097

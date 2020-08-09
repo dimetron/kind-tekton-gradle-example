@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1alpha1
+kind: Task
+metadata:
+  name: gradle
+spec:
+  params:
+    - name: task
+      description: task name to run
+      type: string
+      default: 'tasks'
+  steps:
+    - name: hello-gradle
+      image: gradle
+      command: ["/bin/bash"]
+      args: ['-c', 'gradle $(params.task)']

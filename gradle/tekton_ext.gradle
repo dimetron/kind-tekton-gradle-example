@@ -7,7 +7,6 @@ ext {
 task verify_tekton_cluster  {
     doLast {
         try {
-            new File("logs").mkdirs()
             new File(".gradle/cluster").delete()
             String cli = sh(script: "docker ps -q -a --no-trunc --filter name=$shell_cli", localMode: true, returnStdout: true).trim()
             if (cli.length() > 0) {
@@ -39,10 +38,8 @@ task create_tekton_cluster(dependsOn: verify_tekton_cluster) {
 
         sh(script: "docker rm  -f $shell_cli", localMode: true,  returnStatus: true, returnStderr: true)
         sh(script: "$cmd", localMode: true, returnStderr: true).trim()
-        sh(script: "kind delete cluster --name ${project.name}", returnStatus: true)
-    }
+        sh(script: "kind delete cluster --name ${project.name} 2>&1", returnStatus: true)
 
-    doLast {
         sh """
         kind create cluster --name ${project.name} --config=/root/tools/kind-config.yaml --wait 2m 2>&1
         mkdir -p ~/.kube
@@ -51,60 +48,62 @@ task create_tekton_cluster(dependsOn: verify_tekton_cluster) {
     }
 }
 
-task install_tekton(dependsOn: create_tekton_cluster) {
-    group = 'tekton-cd'
-
-    inputs.dir('tekton/latest')
-    outputs.file('logs/install.log')
-
-    doFirst {
-        println"${styler['blue']('Deploying Tekton')} ${styler['cyan']('...')}\n"
-        sh """
-        kubectl apply -f tekton/latest/release.yaml           | tee logs/install.log
-        kubectl apply -f tekton/latest/triggers-release.yaml  | tee logs/triggers.log
-        kubectl apply -f tekton/latest/dashboard-release.yaml | tee logs/dashboard.log
-        kubectl apply -f tekton/latest/ingress.yaml           | tee logs/ingress.log
-        """
-    }
-
+task set_tekton_namespace(dependsOn: create_tekton_cluster) {
     doLast {
-        println"${styler['blue']('Waiting for pods to start')} ${styler['cyan']('...')}"
-        sh """
-        kubectl wait --for=condition=ready pod --selector=app=tekton-pipelines-controller        --timeout=120s --namespace tekton-pipelines || :
-        kubectl wait --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s --namespace ingress-nginx    || :  
-        kubectl apply -f tekton/latest/ingress-dashboard.yaml
-        """
-    }
-}
-
-//task starts tekton pipeline in kind k8s cluster
-tasks.register('pipeline_run') {
-    group = 'tekton-cd'
-
-    doFirst {
-        println"${styler['blue']('Tekton Status')} ${styler['cyan']('...')}"
-        sh """
-        kind load docker-image dev-tools:latest --name ${project.name}
-        kubectl get pods -n tekton-pipelines
-        """
-
         //copy kubectl from container to the host
+        sh "kubectl get ns tekton-pipelines || kubectl create ns tekton-pipelines"
         sh "kubectl config set-context --current --namespace=tekton-pipelines"
         def configFile = new File("$userHome/.kube/config")
         configFile.mkdirs()
         configFile.delete()
         String config = sh(script: "cat ~/.kube/config", returnStdout: true)
         configFile << config
-
     }
+}
 
-    doLast {
-        def resources = ['pipeline_resources', 'tasks', 'pipeline', 'pipeline_run', 'pipeline_triggers']
+task install_tekton(dependsOn: set_tekton_namespace) {
+    group = 'tekton-cd'
+    inputs.dir('tekton/app')
+
+    doFirst {
+        println"${styler['blue']('Deploying Tekton')} ${styler['cyan']('...')}\n"
+        def resources = ['pipelines', 'dashboard', 'ingress', 'triggers']
         resources.each { kind ->
             println"${styler['blue']("Deploying")} ${styler['cyan']("$kind")}"
-            sh """
-            kubectl apply -f tekton/${kind}.yaml | tee /root/logs/${kind}.log
-            """
+            sh "kapp deploy -y -a tekton-app-${kind} -n tekton-pipelines -f tekton/app/${kind}/release.yaml"
         }
+    }
+}
+
+def startPipeline(String name) {
+    println"${styler['red']("Running pipeline ")} ${styler['cyan']("$name ...")}"
+    sh "tkn pipeline start $name"
+}
+
+//task starts tekton pipeline in kind k8s cluster
+tasks.register('create_pipelines') {
+    group = 'tekton-cd'
+    inputs.dir('tekton/impl')
+
+    doFirst {
+        def resources = ['resource', 'condition', 'task', 'pipeline', 'trigger']
+        resources.each { kind ->
+            println "${styler['blue']("Deploying")} ${styler['cyan']("$kind")}"
+            sh "kapp deploy -y -a tekton-impl-${kind} -f tekton/impl/$kind -n tekton-pipelines"
+        }
+    }
+}
+
+//run pipeline
+tasks.register('pipeline_run') {
+    group = 'tekton-cd'
+    dependsOn = ['create_pipelines']
+    doLast {
+        //for pipeline run we delete and create
+        println"${styler['green']("Cleanup")} ${styler['cyan']("...")}"
+
+        sh "tkn pipelinerun delete  --all -f"
+        startPipeline "print-date-pipeline"
+        startPipeline "gradle-pipeline"
     }
 }

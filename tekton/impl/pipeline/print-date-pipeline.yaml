@@ -1,0 +1,15 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: print-date-pipeline
+spec:
+  tasks:
+    - name: print-date-step
+      taskRef:
+        name: print-date
+    - name: echo-context-step
+      taskRef:
+        name: echo-hello
+      params:
+        - name:  "sname"
+          value: "$(context.pipelineRun.name)"

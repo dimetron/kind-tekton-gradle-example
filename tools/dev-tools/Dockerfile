@@ -10,7 +10,7 @@ RUN echo "LANG=en_US.utf-8" >> /etc/environment \
 
 WORKDIR /root
 
-COPY docker-ce.repo /etc/yum.repos.d/docker-ce.repo 
+COPY docker-ce.repo /etc/yum.repos.d/docker-ce.repo
 
 #Install cli tools    
 RUN echo "Installing additional software" \ 
@@ -80,6 +80,17 @@ RUN curl -sLO "https://github.com/bcicen/ctop/releases/download/v0.7.1/ctop-0.7.
 RUN curl -sLO "https://github.com/tektoncd/cli/releases/download/v0.11.0/tkn_0.11.0_Linux_x86_64.tar.gz" && \
     tar xvzf tkn_0.11.0_Linux_x86_64.tar.gz -C /usr/bin tkn && \
     chmod +x /usr/bin/tkn
+
+#kapp
+RUN curl -sLO "https://github.com/k14s/kapp/releases/download/v0.33.0/kapp-linux-amd64" && \
+    mv kapp-linux-amd64 /usr/bin/kapp && \
+    chmod +x /usr/bin/kapp
+
+#kail
+RUN curl -sLO "https://github.com/boz/kail/releases/download/v0.15.0/kail_0.15.0_linux_amd64.tar.gz" && \
+    tar xvzf kail_0.15.0_linux_amd64.tar.gz  && \
+    mv kail /usr/bin      && \
+    chmod +x /usr/bin/kail
 
 #add custom user
 ADD https://github.com/dimetron.keys /root/.ssh/authorized_keys

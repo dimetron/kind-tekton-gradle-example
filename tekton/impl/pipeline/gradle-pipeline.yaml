@@ -1,0 +1,51 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: gradle-pipeline
+spec:
+  tasks:
+    - name: pre-deploy
+      taskRef:
+        name: echo-hello
+      params:
+        - name:  "sname"
+          value: "$(context.pipelineRun.name)"
+    - name: setup
+      runAfter:
+        - pre-deploy
+      taskRef:
+        name: gradle
+    - name: crds
+      runAfter:
+        - setup
+      taskRef:
+        name: gradle
+    - name: operators
+      runAfter:
+        - setup
+      taskRef:
+        name: gradle
+      #conditions:
+      #  - conditionRef: "verify-clean-build"
+    - name: install
+      timeout: "1h0m0s"
+      runAfter:
+        - crds
+        - operators
+      taskRef:
+        name: gradle
+      #conditions:
+      #  - conditionRef: "verify-clean-build"
+    - name: upgrade
+      timeout: "0h10m0s"
+      runAfter:
+        - install
+      taskRef:
+        name: gradle
+    - name: report
+      timeout: "0h10m0s"
+      runAfter:
+        - upgrade
+        - install
+      taskRef:
+        name: gradle
