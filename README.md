@@ -5,7 +5,7 @@ This project is example how to migrate from jenkins pipelines to the cloud nativ
 ## What is Included
 
 - all tools as docker image ```docker exec -it dev-tools zsh``` 
-- scripts to bootstrap local k8s cluster with Kind https://kind.sigs.k8s.io
+- gradle one click scripts to bootstrap local k8s cluster with Kind https://kind.sigs.k8s.io
 - latest Tekton pipelines and triggers with dashboard
 
 - Dashboard v0.8.2  http://localhost:8080/#/about
