@@ -1,0 +1,9 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: print-date-pipeline-run
+  generateName: print-date-pipeline-run-
+spec:
+  serviceAccountName: 'default'
+  pipelineRef:
+    name: print-date-pipeline

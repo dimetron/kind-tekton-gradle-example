@@ -75,9 +75,14 @@ task install_tekton(dependsOn: set_tekton_namespace) {
     }
 }
 
-def startPipeline(String name) {
-    println"${styler['red']("Running pipeline ")} ${styler['cyan']("$name ...")}"
-    sh "tkn pipeline start $name"
+def startPipeline(String pipeline) {
+    println"${styler['red']("Running pipeline ")} ${styler['cyan']("${pipeline} ...")}"
+
+    sh """
+    kubectl apply -f tekton/impl/run/${pipeline}-run.yaml
+    tkn pipelinerun logs ${pipeline}-run --follow
+    """
+    //tkn pipeline start ${pipeline} --use-pipelinerun ${pipeline}-run --showlog
 }
 
 //task starts tekton pipeline in kind k8s cluster

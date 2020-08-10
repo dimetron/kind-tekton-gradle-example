@@ -1,11 +1,13 @@
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: tekton-gradle-example-git
+  name: example-git-repo
 spec:
   type: git
   params:
   - name: revision
     value: master
+  - name: refspec
+    value: "refs/tags/*:refs/tags/* +refs/heads/master:refs/heads/master"
   - name: url
     value: https://github.com/dimetron/kind-tekton-gradle-example.git

@@ -58,7 +58,7 @@ def sh(Map opts) {
 
     def cmdline = ['sh']
     def script = "${opts.script}".replaceAll('\r\n', '\n').trim()
-    def localMode = opts.containsKey('localMode')
+    def localMode = project.properties.getOrDefault("localMode", opts.containsKey('localMode'))
 
     //2 exceptions to run locally
     def localOnlyCommands = ['git', 'hostname', 'cmd', 'start']

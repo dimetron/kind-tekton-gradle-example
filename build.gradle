@@ -10,13 +10,51 @@ task build_tools {
     }
 }
 
-// hello gradle task
+// --- start
+
 tasks.register('hello_gradle') {
     group = 'tekton-tasks'
     doLast {
         sh 'echo "Hello Gradle"'
     }
 }
+
+tasks.register('cd_install') {
+    group = 'tekton-tasks'
+    doLast {
+        sh "echo $name"
+    }
+}
+
+tasks.register('cd_install_crd') {
+    group = 'tekton-tasks'
+    doLast {
+        sh "echo $name"
+    }
+}
+
+tasks.register('cd_install_operators') {
+    group = 'tekton-tasks'
+    doLast {
+        sh "echo $name"
+    }
+}
+
+tasks.register('cd_upgrade') {
+    group = 'tekton-tasks'
+    doLast {
+        sh "echo $name"
+    }
+}
+
+tasks.register('cd_report') {
+    group = 'tekton-tasks'
+    doLast {
+        sh "echo $name"
+    }
+}
+
+// --- end
 
 tasks.register('all-tasks') {
     group = 'tekton-cd'

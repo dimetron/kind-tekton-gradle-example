@@ -3,6 +3,9 @@ kind: Pipeline
 metadata:
   name: gradle-pipeline
 spec:
+  params:
+    - name: gitUrl
+      description: Git repository url
   tasks:
     - name: pre-deploy
       taskRef:
@@ -15,18 +18,33 @@ spec:
         - pre-deploy
       taskRef:
         name: gradle
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
     - name: crds
       runAfter:
         - setup
       taskRef:
         name: gradle
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+
     - name: operators
       runAfter:
         - setup
       taskRef:
         name: gradle
-      #conditions:
-      #  - conditionRef: "verify-clean-build"
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+        - name: task
+          value: cd_operators
+
     - name: install
       timeout: "1h0m0s"
       runAfter:
@@ -34,14 +52,28 @@ spec:
         - operators
       taskRef:
         name: gradle
-      #conditions:
-      #  - conditionRef: "verify-clean-build"
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+        - name: task
+          value: cd_install
+
     - name: upgrade
       timeout: "0h10m0s"
       runAfter:
         - install
       taskRef:
         name: gradle
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+        - name: task
+          value: cd_install
+
     - name: report
       timeout: "0h10m0s"
       runAfter:
@@ -49,3 +81,10 @@ spec:
         - install
       taskRef:
         name: gradle
+      params:
+        - name: url
+          value: "$(params.gitUrl)"
+        - name: revision
+          value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+        - name: task
+          value: cd_report

@@ -1,7 +1,0 @@
-apiVersion: tekton.dev/v1alpha1
-kind: PipelineRun
-metadata:
-  name: gradle-pipelinerun
-spec:
-  pipelineRef:
-    name: gradle-pipeline
