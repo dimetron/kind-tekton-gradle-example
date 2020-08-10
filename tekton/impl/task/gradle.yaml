@@ -85,3 +85,8 @@ spec:
         CHECKOUT_DIR="/workspace/$(params.subdirectory)"
         cd "$CHECKOUT_DIR"
         gradle $(params.task) --console=plain -PlocalMode=true
+        EXIT_CODE="$?"
+        if [ "$EXIT_CODE" != 0 ]
+        then
+          exit $EXIT_CODE
+        fi

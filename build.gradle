@@ -33,7 +33,7 @@ tasks.register('cd_install_crd') {
     }
 }
 
-tasks.register('cd_install_operators') {
+tasks.register('cd_operators') {
     group = 'tekton-tasks'
     doLast {
         sh "echo $name"

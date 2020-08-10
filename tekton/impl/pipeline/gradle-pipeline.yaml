@@ -58,7 +58,7 @@ spec:
         - name: revision
           value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
         - name: task
-          value: cd_install
+          value: cd_install_crd
 
     - name: upgrade
       timeout: "0h10m0s"
