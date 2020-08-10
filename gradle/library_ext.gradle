@@ -8,21 +8,21 @@ ext {
 }
 
 def cd_install() {
-    sh "kubectl get pods || :"
+    sh "kubectl auth can-i list pods || :"
 }
 
 def cd_install_crd() {
-    sh "kubectl get pods || :"
+    sh "kubectl auth can-i list pods || :"
 }
 
 def cd_operators() {
-    sh "kubectl get pods || :"
+    sh "kubectl auth can-i list pods || :"
 }
 
 def cd_upgrade() {
-    sh "kubectl get pods || :"
+    sh "kubectl auth can-i list pods || :"
 }
 
 def cd_report() {
-    sh "kubectl get pods || :"
+    sh "kubectl auth can-i list pods || :"
 }

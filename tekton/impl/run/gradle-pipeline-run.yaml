@@ -3,7 +3,7 @@ kind: PipelineRun
 metadata:
   name: gradle-pipeline-run
 spec:
-  serviceAccountName: 'default'
+  serviceAccountName: 'tekton-dashboard'
   pipelineRef:
     name: gradle-pipeline
   params:
