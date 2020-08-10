@@ -1,0 +1,23 @@
+ext {
+    //exported library methods
+    cd_report       = this.&cd_report
+    cd_upgrade      = this.&cd_upgrade
+    cd_install      = this.&cd_install
+    cd_operators    = this.&cd_operators
+    cd_install_crd  = this.&cd_install_crd
+}
+
+def cd_install() {
+}
+
+def cd_install_crd() {
+}
+
+def cd_operators() {
+}
+
+def cd_upgrade() {
+}
+
+def cd_report() {
+}

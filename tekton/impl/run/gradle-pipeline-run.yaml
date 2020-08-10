@@ -2,7 +2,6 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   name: gradle-pipeline-run
-  generateName: gradle-pipeline-run-
 spec:
   serviceAccountName: 'default'
   pipelineRef:

@@ -31,6 +31,8 @@ spec:
           value: "$(params.gitUrl)"
         - name: revision
           value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
+        - name: task
+          value: cd_install_crd
 
     - name: operators
       runAfter:
@@ -58,7 +60,7 @@ spec:
         - name: revision
           value: "$(tasks. parse-git-commit-id.results. git-commit-id)"
         - name: task
-          value: cd_install_crd
+          value: cd_install
 
     - name: upgrade
       timeout: "0h10m0s"

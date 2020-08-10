@@ -1,6 +1,7 @@
 //add some DSL
 apply from: 'gradle/gradle_ext.gradle'
 apply from: 'gradle/tekton_ext.gradle'
+apply from: 'gradle/library_ext.gradle'
 
 task build_tools {
     inputs.dir("tools")
@@ -22,35 +23,35 @@ tasks.register('hello_gradle') {
 tasks.register('cd_install') {
     group = 'tekton-tasks'
     doLast {
-        sh "echo $name"
+        cd_install()
     }
 }
 
 tasks.register('cd_install_crd') {
     group = 'tekton-tasks'
     doLast {
-        sh "echo $name"
+        cd_install_crd()
     }
 }
 
 tasks.register('cd_operators') {
     group = 'tekton-tasks'
     doLast {
-        sh "echo $name"
+        cd_operators()
     }
 }
 
 tasks.register('cd_upgrade') {
     group = 'tekton-tasks'
     doLast {
-        sh "echo $name"
+        cd_upgrade()
     }
 }
 
 tasks.register('cd_report') {
     group = 'tekton-tasks'
     doLast {
-        sh "echo $name"
+        cd_report()
     }
 }
 

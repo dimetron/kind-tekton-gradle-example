@@ -80,7 +80,8 @@ spec:
           echo -n "$RESULT_SHA" > $(results.commit.path)
 
     - name: gradle
-      image: gradle
+      image: dimetron/gradle-k8s:latest
       script: |
         set -e ; cd "/workspace/$(params.subdirectory)"
         gradle -q --console=plain -PlocalMode=true $(params.task)
+        exit "$?"
