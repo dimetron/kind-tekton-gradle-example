@@ -2,6 +2,18 @@
 
 This project is example how to migrate from jenkins pipelines to the cloud native tekton CD using gradle
 
+## Why Tekton pipelines
+
+- GitOps
+- Cloud native
+- Industry Standard 
+- Task Encapsulation
+
+## Reusable Tasks Catalog
+
+- https://github.com/tektoncd/catalog
+- https://github.com/open-toolchain/tekton-catalog
+
 ## What is Included
 
 - all tools as docker image ```docker exec -it dev-tools zsh``` 

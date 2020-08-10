@@ -13,6 +13,7 @@ spec:
       params:
         - name:  "sname"
           value: "$(context.pipelineRun.name)"
+
     - name: setup
       runAfter:
         - pre-deploy
