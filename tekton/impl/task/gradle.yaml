@@ -84,7 +84,7 @@ spec:
       script: |
         CHECKOUT_DIR="/workspace/$(params.subdirectory)"
         cd "$CHECKOUT_DIR"
-        gradle $(params.task) --console=plain -PlocalMode=true -Dorg.gradle.internal.launcher.welcomeMessageEnabled=false
+        gradle -q --console=plain -PlocalMode=true $(params.task)
         EXIT_CODE="$?"
         if [ "$EXIT_CODE" != 0 ]
         then
