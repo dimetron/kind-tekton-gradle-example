@@ -43,24 +43,10 @@ spec:
     - name: clone-repo
       image: gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:latest
       script: |
-          set
           CHECKOUT_DIR="/workspace/$(params.subdirectory)"
-
-          cleandir() {
-            # Delete any existing contents of the repo directory if it exists.
-            #
-            # We don't just "rm -rf $CHECKOUT_DIR" because $CHECKOUT_DIR might be "/"
-            # or the root of a mounted volume.
-            if [[ -d "$CHECKOUT_DIR" ]] ; then
-              # Delete non-hidden files and directories
-              rm -rf "$CHECKOUT_DIR"/*
-              # Delete files and directories starting with . but excluding ..
-              rm -rf "$CHECKOUT_DIR"/.[!.]*
-              # Delete files and directories starting with .. plus any other character
-              rm -rf "$CHECKOUT_DIR"/..?*
-            fi
-          }
-          cleandir
+          rm -rf "$CHECKOUT_DIR"/*
+          rm -rf "$CHECKOUT_DIR"/.[!.]*
+          rm -rf "$CHECKOUT_DIR"/..?*
 
           /ko-app/git-init \
             -url "$(params.url)" \
@@ -76,7 +62,6 @@ spec:
           then
             exit $EXIT_CODE
           fi
-          # Make sure we don't add a trailing newline to the result!
           echo -n "$RESULT_SHA" > $(results.commit.path)
 
     - name: gradle

@@ -12,7 +12,12 @@ spec:
     - name: current-date-human-readable
       description: The current date in human readable format
   steps:
-    - name: print-date-unix-timestamp
+    - name: print-env
+      image: bash:latest
+      script: |
+        #!/usr/bin/env bash
+        set
+    - name: print-date-timestamp
       image: bash:latest
       script: |
         #!/usr/bin/env bash
