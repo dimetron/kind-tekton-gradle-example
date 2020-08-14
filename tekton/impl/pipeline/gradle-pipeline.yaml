@@ -4,8 +4,11 @@ metadata:
   name: gradle-pipeline
 spec:
   params:
+    - name: cleanMode
+      description: Clean install mode
     - name: gitUrl
       description: Git repository url
+
   tasks:
     - name: pre-deploy
       taskRef:

@@ -13,6 +13,8 @@ This project is example how to migrate from jenkins pipelines to the cloud nativ
 
 - https://github.com/tektoncd/catalog
 - https://github.com/open-toolchain/tekton-catalog
+- https://cd.foundation/blog/2020/08/10/introducing-tekton-hub/
+
 
 ## What is Included
 

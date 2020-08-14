@@ -2,10 +2,16 @@ apiVersion: tekton.dev/v1beta1
 kind: PipelineRun
 metadata:
   name: gradle-pipeline-run
+  labels:
+    my-env : "latest"
+    branch : "master"
 spec:
-  serviceAccountName: 'tekton-dashboard'
+  serviceAccountName: 'default'
   pipelineRef:
     name: gradle-pipeline
+
   params:
     - name: gitUrl
       value: "https://github.com/dimetron/kind-tekton-gradle-example.git"
+    - name: cleanMode
+      value: "true"
