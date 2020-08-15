@@ -2,8 +2,9 @@
 
 This project is example how to migrate from jenkins pipelines to the cloud native tekton CD using gradle
 
-[GitLab](https://gitlab.com/dimetron/tekton-pipeline-demo)
-[GitHub](https://github.com/dimetron/kind-tekton-gradle-example)
+- [GitLab](https://gitlab.com/dimetron/tekton-pipeline-demo)
+- [GitHub](https://github.com/dimetron/kind-tekton-gradle-example)
+
 
 ## Why Tekton pipelines
 
